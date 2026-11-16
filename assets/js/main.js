@@ -3,9 +3,61 @@
   'use strict';
 
   var config = window.VELORA_CONFIG || {};
+  var lang = (document.documentElement.lang || 'es').slice(0, 2);
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var $ = function (sel, ctx) { return (ctx || document).querySelector(sel); };
   var $$ = function (sel, ctx) { return Array.prototype.slice.call((ctx || document).querySelectorAll(sel)); };
+
+  /* ---------- UI strings ---------- */
+  var STRINGS = {
+    es: {
+      menuOpen: 'Abrir menú',
+      menuClose: 'Cerrar menú',
+      errName: 'Escribe tu nombre completo.',
+      errEmail: 'Escribe un correo electrónico válido.',
+      errType: 'Elige un tipo de proyecto.',
+      errMessage: 'Cuéntanos un poco más (mínimo 10 caracteres).',
+      errConsent: 'Necesitamos tu consentimiento para poder responderte.',
+      review: 'Revisa los campos marcados.',
+      sending: 'Enviando…',
+      sent: 'Gracias. Hemos recibido tu solicitud y te responderemos lo antes posible.',
+      failed: 'No se ha podido enviar el mensaje. Inténtalo de nuevo en unos minutos',
+      failedEmail: ' o escríbenos a ',
+      inactive: 'El formulario aún no está activo, así que tu mensaje no se ha enviado.',
+      inactiveEmail: 'El envío online aún no está activo. Puedes enviarnos la solicitud por correo: ',
+      openMail: 'abrir en tu aplicación de correo',
+      noteEmail: ' Mientras tanto, puedes escribirnos a ',
+      mailSubject: 'Nueva solicitud de proyecto',
+      mailName: 'Nombre', mailEmail: 'Correo', mailBusiness: 'Negocio', mailType: 'Tipo de proyecto'
+    },
+    en: {
+      menuOpen: 'Open menu',
+      menuClose: 'Close menu',
+      errName: 'Please enter your full name.',
+      errEmail: 'Please enter a valid email address.',
+      errType: 'Please choose a type of project.',
+      errMessage: 'Please tell us a little more (at least 10 characters).',
+      errConsent: 'We need your consent to be able to reply.',
+      review: 'Please review the highlighted fields.',
+      sending: 'Sending…',
+      sent: 'Thank you. We have received your enquiry and will get back to you as soon as possible.',
+      failed: 'Your message could not be sent. Please try again in a few minutes',
+      failedEmail: ' or email us at ',
+      inactive: 'The form is not active yet, so your message has not been sent.',
+      inactiveEmail: 'Online sending is not active yet. You can send your enquiry by email: ',
+      openMail: 'open it in your email app',
+      noteEmail: ' In the meantime, you can email us at ',
+      mailSubject: 'New project enquiry',
+      mailName: 'Name', mailEmail: 'Email', mailBusiness: 'Business', mailType: 'Type of project'
+    }
+  };
+  var t = STRINGS[lang] || STRINGS.es;
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
 
   /* ---------- Hero entrance ---------- */
   var hero = $('.hero');
@@ -22,24 +74,41 @@
   function onScrollHeader() { header.classList.toggle('is-scrolled', window.scrollY > 24); }
   onScrollHeader();
 
+  /* ---------- Language switch: keep the current section ---------- */
+  $$('[data-lang-link]').forEach(function (a) {
+    a.addEventListener('click', function () {
+      if (a.getAttribute('aria-current') === 'page') return;
+      if (location.hash && /^#[\w-]+$/.test(location.hash)) a.href = a.href.split('#')[0] + location.hash;
+    });
+  });
+
+  // Smooth scrolling only after load, so arriving at /#section (e.g. from the
+  // other language) jumps straight there instead of animating from the top.
+  window.addEventListener('load', function () {
+    setTimeout(function () { document.documentElement.classList.add('is-loaded'); }, 50);
+  });
+
   /* ---------- Mobile menu ---------- */
   var toggle = $('.menu-toggle');
   var menu = $('#mobile-menu');
   var lastFocus = null;
+  var isOpen = function () { return toggle.getAttribute('aria-expanded') === 'true'; };
 
   function setMenu(open) {
     toggle.setAttribute('aria-expanded', String(open));
-    toggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+    toggle.setAttribute('aria-label', open ? t.menuClose : t.menuOpen);
     document.body.classList.toggle('menu-open', open);
+    var main = $('#main');
+    var footer = $('.footer');
+    if (main) main.inert = open;
+    if (footer) footer.inert = open;
     if (open) {
       lastFocus = document.activeElement;
       menu.hidden = false;
-      // next frame so the transition runs
-      requestAnimationFrame(function () {
-        menu.classList.add('is-open');
-        var first = $('a', menu);
-        if (first) first.focus({ preventScroll: true });
-      });
+      void menu.offsetHeight; // force a reflow so the opening transition runs
+      menu.classList.add('is-open');
+      var first = $('a', menu);
+      if (first) first.focus({ preventScroll: true });
     } else {
       menu.classList.remove('is-open');
       setTimeout(function () { if (!menu.classList.contains('is-open')) menu.hidden = true; }, reduceMotion ? 0 : 500);
@@ -47,25 +116,24 @@
     }
   }
 
-  toggle.addEventListener('click', function () {
-    setMenu(toggle.getAttribute('aria-expanded') !== 'true');
-  });
+  toggle.addEventListener('click', function () { setMenu(!isOpen()); });
   $$('a', menu).forEach(function (a) {
     a.addEventListener('click', function () { setMenu(false); });
   });
   document.addEventListener('keydown', function (e) {
-    if (toggle.getAttribute('aria-expanded') !== 'true') return;
+    if (!isOpen()) return;
     if (e.key === 'Escape') { setMenu(false); return; }
-    if (e.key === 'Tab') { // keep focus inside menu + toggle
-      var items = [toggle].concat($$('a', menu));
+    if (e.key === 'Tab') { // keep focus inside menu, toggle and language switch
+      var items = [toggle].concat($$('.lang-switch a'), $$('a', menu));
       var i = items.indexOf(document.activeElement);
       if (e.shiftKey && i <= 0) { e.preventDefault(); items[items.length - 1].focus(); }
       else if (!e.shiftKey && i === items.length - 1) { e.preventDefault(); items[0].focus(); }
     }
   });
-  window.matchMedia('(min-width: 1081px)').addEventListener('change', function (mq) {
-    if (mq.matches && toggle.getAttribute('aria-expanded') === 'true') setMenu(false);
-  });
+  var desktopMQ = window.matchMedia('(min-width: 1081px)');
+  var onMQ = function (mq) { if (mq.matches && isOpen()) setMenu(false); };
+  if (desktopMQ.addEventListener) desktopMQ.addEventListener('change', onMQ);
+  else if (desktopMQ.addListener) desktopMQ.addListener(onMQ); // Safari < 14
 
   /* ---------- Reveal on scroll ---------- */
   var revealTargets = $$('[data-reveal], [data-steps]');
@@ -93,7 +161,7 @@
         navLinks.forEach(function (a) {
           var active = a.getAttribute('href') === '#' + entry.target.id;
           a.classList.toggle('is-active', active);
-          if (active) a.setAttribute('aria-current', 'true'); else a.removeAttribute('aria-current');
+          if (active) a.setAttribute('aria-current', 'location'); else a.removeAttribute('aria-current');
         });
       });
     }, { rootMargin: '-45% 0px -50% 0px' });
@@ -122,16 +190,15 @@
   }, { passive: true });
 
   /* ---------- Configurable contact details ---------- */
-  var emailWrap = $('[data-contact-email]');
-  var emailLink = $('[data-contact-email-link]');
   var emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
   var contactEmail = (config.contactEmail || '').trim();
-  if (contactEmail && emailValid.test(contactEmail)) {
+  if (!emailValid.test(contactEmail)) contactEmail = '';
+
+  if (contactEmail) {
+    var emailLink = $('[data-contact-email-link]');
     emailLink.href = 'mailto:' + contactEmail;
     emailLink.textContent = contactEmail;
-    emailWrap.hidden = false;
-  } else {
-    contactEmail = '';
+    $('[data-contact-email]').hidden = false;
   }
 
   var socialLabels = { instagram: 'Instagram', linkedin: 'LinkedIn', behance: 'Behance', dribbble: 'Dribbble' };
@@ -139,7 +206,7 @@
   var socialList = $('[data-social-list]');
   Object.keys(social).forEach(function (key) {
     var url = (social[key] || '').trim();
-    if (!/^https:\/\//.test(url)) return;
+    if (!/^https:\/\/\S+$/.test(url)) return;
     var li = document.createElement('li');
     var a = document.createElement('a');
     a.href = url; a.target = '_blank'; a.rel = 'noopener';
@@ -153,27 +220,32 @@
   var form = $('#contact-form');
   var status = $('[data-form-status]');
   var submitBtn = $('[data-submit]');
+  var note = $('[data-form-note]');
   var endpoint = (config.formEndpoint || '').trim();
-  var isLive = /^https:\/\//.test(endpoint);
+  var isLive = /^https:\/\/\S+$/.test(endpoint);
 
   if (isLive) {
-    // Real backend configured: replace the demo notice.
-    var note = $('[data-form-note]');
+    // A real form service is configured: remove the "not active" notice.
     note.parentNode.removeChild(note);
     form.removeAttribute('aria-describedby');
+    form.action = endpoint; // also lets the form work if JS fails mid-way
+  } else if (contactEmail) {
+    note.insertAdjacentHTML('beforeend', escapeHtml(t.noteEmail) +
+      '<a href="mailto:' + escapeHtml(contactEmail) + '">' + escapeHtml(contactEmail) + '</a>.');
   }
 
   var rules = {
-    name: function (v) { return v.length >= 2 ? '' : 'Please enter your full name.'; },
-    email: function (v) { return emailValid.test(v) ? '' : 'Please enter a valid email address.'; },
-    project_type: function (v) { return v ? '' : 'Please choose a type of project.'; },
-    message: function (v) { return v.length >= 10 ? '' : 'Please tell us a little more (at least 10 characters).'; }
+    name: function (f) { return f.value.trim().length >= 2 ? '' : t.errName; },
+    email: function (f) { return emailValid.test(f.value.trim()) ? '' : t.errEmail; },
+    project_type: function (f) { return f.value ? '' : t.errType; },
+    message: function (f) { return f.value.trim().length >= 10 ? '' : t.errMessage; },
+    consent: function (f) { return f.checked ? '' : t.errConsent; }
   };
 
   function validateField(field) {
     var rule = rules[field.name];
     if (!rule) return true;
-    var msg = rule(field.value.trim());
+    var msg = rule(field);
     var wrap = field.closest('.field');
     var err = $('#' + field.id + '-err');
     wrap.classList.toggle('has-error', !!msg);
@@ -185,35 +257,40 @@
     return !msg;
   }
 
-  $$('input, select, textarea', form).forEach(function (field) {
-    field.addEventListener('blur', function () { if (field.value) validateField(field); });
-    field.addEventListener('input', function () {
+  Object.keys(rules).forEach(function (name) {
+    var field = form.elements[name];
+    var evt = field.type === 'checkbox' || field.tagName === 'SELECT' ? 'change' : 'input';
+    field.addEventListener('blur', function () { if (field.value && field.type !== 'checkbox') validateField(field); });
+    field.addEventListener(evt, function () {
       if (field.closest('.field').classList.contains('has-error')) validateField(field);
     });
   });
 
-  function setStatus(html, success) {
+  function setStatus(html, kind) {
     status.innerHTML = html;
-    status.classList.toggle('is-success', !!success);
+    status.classList.toggle('is-success', kind === 'success');
+    status.classList.toggle('is-error', kind === 'error');
   }
 
   function buildMailto(data) {
-    var body = 'Full name: ' + data.get('name') + '\n' +
-      'Email: ' + data.get('email') + '\n' +
-      'Business: ' + (data.get('business') || '-') + '\n' +
-      'Type of project: ' + data.get('project_type') + '\n\n' +
+    var body = t.mailName + ': ' + data.get('name') + '\n' +
+      t.mailEmail + ': ' + data.get('email') + '\n' +
+      t.mailBusiness + ': ' + (data.get('business') || '-') + '\n' +
+      t.mailType + ': ' + data.get('project_type') + '\n\n' +
       data.get('message');
-    return 'mailto:' + contactEmail + '?subject=' + encodeURIComponent('New project enquiry') +
+    return 'mailto:' + contactEmail + '?subject=' + encodeURIComponent(t.mailSubject) +
       '&body=' + encodeURIComponent(body);
   }
 
   form.addEventListener('submit', function (e) {
     e.preventDefault();
-    var fields = $$('[name]', form);
     var firstInvalid = null;
-    fields.forEach(function (f) { if (!validateField(f) && !firstInvalid) firstInvalid = f; });
+    Object.keys(rules).forEach(function (name) {
+      var f = form.elements[name];
+      if (!validateField(f) && !firstInvalid) firstInvalid = f;
+    });
     if (firstInvalid) {
-      setStatus('Please review the highlighted fields.');
+      setStatus(escapeHtml(t.review), 'error');
       firstInvalid.focus();
       return;
     }
@@ -221,27 +298,50 @@
     var data = new FormData(form);
 
     if (!isLive) {
-      // DEMO mode — be explicit that nothing was sent.
-      var msg = 'Thank you. The details are valid, but <strong>this is a demo form and no message has been sent.</strong>';
+      // No form service yet: never pretend the message was sent.
       if (contactEmail) {
-        msg += ' You can <a href="' + buildMailto(data).replace(/"/g, '&quot;') + '">send it from your email app</a> instead.';
+        setStatus(escapeHtml(t.inactiveEmail) + '<a href="' + escapeHtml(buildMailto(data)) + '">' +
+          escapeHtml(t.openMail) + '</a>.');
+      } else {
+        setStatus(escapeHtml(t.inactive), 'error');
       }
-      setStatus(msg);
       return;
     }
 
     submitBtn.disabled = true;
-    setStatus('Sending…');
+    form.setAttribute('aria-busy', 'true');
+    setStatus(escapeHtml(t.sending));
+
     fetch(endpoint, { method: 'POST', body: data, headers: { Accept: 'application/json' } })
       .then(function (res) {
-        if (!res.ok) throw new Error('Request failed');
+        return res.json().catch(function () { return {}; }).then(function (json) {
+          if (!res.ok) {
+            var detail = json && json.errors && json.errors.length
+              ? json.errors.map(function (er) { return er.message; }).join(' ') : '';
+            var err = new Error(detail || 'HTTP ' + res.status);
+            err.detail = detail;
+            throw err;
+          }
+          return json;
+        });
+      })
+      .then(function () {
         form.reset();
-        setStatus('Thank you — your message has been sent. We will get back to you soon.', true);
+        $$('.field.has-error', form).forEach(function (f) { f.classList.remove('has-error'); });
+        setStatus(escapeHtml(t.sent), 'success');
       })
-      .catch(function () {
-        setStatus('Sorry, the message could not be sent. Please try again later' +
-          (contactEmail ? ' or write to <a href="mailto:' + contactEmail + '">' + contactEmail + '</a>.' : '.'));
+      .catch(function (err) {
+        var msg = escapeHtml(t.failed);
+        if (contactEmail) {
+          msg += escapeHtml(t.failedEmail) + '<a href="mailto:' + escapeHtml(contactEmail) + '">' + escapeHtml(contactEmail) + '</a>';
+        }
+        msg += '.';
+        if (err && err.detail) msg += ' <span class="form-status-detail">(' + escapeHtml(err.detail) + ')</span>';
+        setStatus(msg, 'error');
       })
-      .then(function () { submitBtn.disabled = false; });
+      .then(function () {
+        submitBtn.disabled = false;
+        form.removeAttribute('aria-busy');
+      });
   });
 })();

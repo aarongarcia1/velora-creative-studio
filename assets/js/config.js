@@ -1,18 +1,22 @@
 /**
- * VELORA — site configuration
+ * VELORA — site configuration (shared by the Spanish and English pages)
  * ---------------------------------------------------------------------------
- * Edit ONLY real data here. Anything left empty ("") stays hidden on the site,
- * so nothing fictitious is ever shown.
+ * Fill in ONLY real data. Anything left empty ("") stays hidden on the site,
+ * so nothing fictitious is ever shown. No rebuild is needed after editing
+ * this file: just commit and push.
  *
- *  contactEmail  Public contact email, e.g. "hello@yourdomain.com".
- *                Shown in the Contact section once filled in.
+ *  contactEmail  Public contact email, e.g. "hola@tudominio.com".
+ *                Shown in the Contact section and used as a fallback if the
+ *                online form is not configured or fails.
  *
- *  formEndpoint  URL of a form service that accepts POST requests and replies
- *                with JSON (e.g. Formspree: "https://formspree.io/f/xxxxxxx").
- *                While empty, the contact form works in DEMO mode: it validates
- *                the fields but does NOT send anything, and says so clearly.
+ *  formEndpoint  Endpoint of the form service that receives the enquiries.
+ *                Recommended: Formspree → "https://formspree.io/f/XXXXXXXX".
+ *                Any service that accepts a POST with form data and answers
+ *                with JSON works (see README → "Formulario").
+ *                While empty, the form clearly says it is not active yet and
+ *                nothing is "sent".
  *
- *  social        Real profile URLs only. Empty values are not displayed.
+ *  social        Real profile URLs only (must start with https://).
  */
 window.VELORA_CONFIG = {
   contactEmail: "",
