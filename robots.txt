@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://aarongarcia1.github.io/velora-creative-studio/sitemap.xml
