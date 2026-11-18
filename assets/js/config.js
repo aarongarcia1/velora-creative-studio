@@ -20,7 +20,7 @@
  */
 window.VELORA_CONFIG = {
   contactEmail: "studio.velora.web@gmail.com",
-  formEndpoint: "",
+  formEndpoint: "https://formspree.io/f/xvkaaeqv",
   social: {
     instagram: "",
     linkedin: "",
