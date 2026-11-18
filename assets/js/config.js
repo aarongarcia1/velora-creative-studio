@@ -19,7 +19,7 @@
  *  social        Real profile URLs only (must start with https://).
  */
 window.VELORA_CONFIG = {
-  contactEmail: "",
+  contactEmail: "studio.velora.web@gmail.com",
   formEndpoint: "",
   social: {
     instagram: "",
