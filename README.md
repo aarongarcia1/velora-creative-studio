@@ -74,7 +74,7 @@ indica claramente que el mensaje no se ha enviado.
    ```js
    formEndpoint: "https://formspree.io/f/abcdwxyz",
    ```
-5. Publica los cambios (no hace falta `build.py`, solo `git add`, `commit` y `push`).
+5. Ejecuta `python3 build.py` (actualiza la versión `?v=` para que los navegadores carguen los cambios) y publica con `git add`, `commit` y `push`.
 6. Haz una prueba real desde la web publicada y comprueba que el mensaje llega a tu correo
    y aparece en el panel de Formspree.
 

@@ -14,6 +14,7 @@ Usage (from this folder):   python3 build.py
 Placeholders in the template look like {{key}}. Every key must exist in the
 language file, otherwise the build stops and tells you which one is missing.
 """
+import hashlib
 import json
 import re
 import sys
@@ -29,6 +30,11 @@ LANGS = {
     "en": ("en/index.html", "../", SITE_URL + "en/"),
 }
 
+# Short hash of the CSS/JS files, appended as ?v=... so browsers always load
+# the latest version after a change (otherwise they may keep an old cached copy).
+ASSETS = ["assets/css/styles.css", "assets/js/config.js", "assets/js/main.js"]
+ASSET_V = hashlib.sha1(b"".join((ROOT / a).read_bytes() for a in ASSETS)).hexdigest()[:8]
+
 PLACEHOLDER = re.compile(r"\{\{\s*([a-zA-Z0-9_.]+)\s*\}\}")
 
 
@@ -39,6 +45,7 @@ def build_page(template: str, lang: str) -> str:
         "lang": lang,
         "base": base,
         "site_url": SITE_URL,
+        "asset_v": ASSET_V,
         "page_url": url,
         "url_es": LANGS["es"][2],
         "url_en": LANGS["en"][2],

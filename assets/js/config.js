@@ -2,8 +2,9 @@
  * VELORA — site configuration (shared by the Spanish and English pages)
  * ---------------------------------------------------------------------------
  * Fill in ONLY real data. Anything left empty ("") stays hidden on the site,
- * so nothing fictitious is ever shown. No rebuild is needed after editing
- * this file: just commit and push.
+ * so nothing fictitious is ever shown. After editing this file run
+ * `python3 build.py` (updates the ?v= version so browsers load the new
+ * copy), then commit and push.
  *
  *  contactEmail  Public contact email, e.g. "hola@tudominio.com".
  *                Shown in the Contact section and used as a fallback if the
