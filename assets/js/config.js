@@ -16,10 +16,14 @@
  *                While empty, the form clearly says it is not active yet and
  *                nothing is "sent".
  *
+ *  contactPhone  Public phone number in international format, e.g. "+34600000000".
+ *                Shown as a call link plus a WhatsApp link.
+ *
  *  social        Real profile URLs only (must start with https://).
  */
 window.VELORA_CONFIG = {
   contactEmail: "studio.velora.web@gmail.com",
+  contactPhone: "+34684112184",
   formEndpoint: "https://formspree.io/f/xvkaaeqv",
   social: {
     instagram: "",

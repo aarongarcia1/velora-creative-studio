@@ -201,6 +201,19 @@
     $('[data-contact-email]').hidden = false;
   }
 
+  var contactPhone = (config.contactPhone || '').replace(/[^\d+]/g, '');
+  if (!/^\+\d{8,15}$/.test(contactPhone)) contactPhone = '';
+  if (contactPhone) {
+    var phoneLink = $('[data-contact-phone-link]');
+    phoneLink.href = 'tel:' + contactPhone;
+    // "+34684112184" -> "+34 684 11 21 84"
+    phoneLink.textContent = contactPhone.indexOf('+34') === 0 && contactPhone.length === 12
+      ? contactPhone.replace(/^(\+34)(\d{3})(\d{2})(\d{2})(\d{2})$/, '$1 $2 $3 $4 $5')
+      : contactPhone;
+    $('[data-contact-whatsapp-link]').href = 'https://wa.me/' + contactPhone.slice(1);
+    $('[data-contact-phone]').hidden = false;
+  }
+
   var socialLabels = { instagram: 'Instagram', linkedin: 'LinkedIn', behance: 'Behance', dribbble: 'Dribbble' };
   var social = config.social || {};
   var socialList = $('[data-social-list]');
@@ -214,7 +227,7 @@
     li.appendChild(a); socialList.appendChild(li);
   });
   if (socialList.children.length) $('[data-contact-social]').hidden = false;
-  $('[data-contact-details]').hidden = !contactEmail && !socialList.children.length;
+  $('[data-contact-details]').hidden = !contactEmail && !contactPhone && !socialList.children.length;
 
   /* ---------- Contact form ---------- */
   var form = $('#contact-form');
